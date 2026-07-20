@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductApi.Common.Responses;
 using ProductApi.Dtos.Auth;
@@ -74,6 +75,31 @@ public class AuthController : ControllerBase
             Success = true,
             Message = "Login successful.",
             Data = authResult
+        };
+
+        return Ok(response);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    public ActionResult<ApiResponse<object>> GetCurrentUser()
+    {
+        var response = new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Current user retrieved successfully.",
+            Data = new
+            {
+                UserId = User.FindFirst("userId")?.Value,
+                Email = User.FindFirst("email")?.Value,
+                Role = User.FindFirst("role")?.Value
+            }
         };
 
         return Ok(response);
