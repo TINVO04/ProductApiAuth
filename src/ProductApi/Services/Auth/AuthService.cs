@@ -14,13 +14,16 @@ public class AuthService : IAuthService
 
     private readonly IUserRepository _userRepository;
     private readonly IPasswordService _passwordService;
+    private readonly ITokenService _tokenService;
 
     public AuthService(
         IUserRepository userRepository,
-        IPasswordService passwordService)
+        IPasswordService passwordService,
+        ITokenService tokenService)
     {
         _userRepository = userRepository;
         _passwordService = passwordService;
+        _tokenService = tokenService;
     }
 
     public async Task<User> RegisterAsync(
@@ -62,6 +65,27 @@ public class AuthService : IAuthService
         }
 
         return user;
+    }
+
+    public async Task<AuthResponseDto> LoginAsync(
+        LoginDto request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var user = await _userRepository.GetByEmailAsync(
+            normalizedEmail,
+            cancellationToken);
+
+        if (user is null || !_passwordService.VerifyPassword(
+                user,
+                user.PasswordHash,
+                request.Password))
+        {
+            throw new UnauthorizedException(
+                "Email or password is incorrect.");
+        }
+
+        return _tokenService.CreateAccessToken(user);
     }
 
     private static bool IsDuplicateEmailException(

@@ -42,6 +42,10 @@ public sealed class GlobalExceptionMiddleware
                 StatusCodes.Status400BadRequest,
                 badRequestException.Message,
                 badRequestException.Errors),
+            UnauthorizedException => (
+                StatusCodes.Status401Unauthorized,
+                exception.Message,
+                null),
             ConflictException => (
                 StatusCodes.Status409Conflict,
                 exception.Message,
