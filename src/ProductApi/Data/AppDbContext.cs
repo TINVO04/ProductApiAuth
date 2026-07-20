@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Category> Categories => Set<Category>();
 
+    public DbSet<User> Users => Set<User>();
+
     public override Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {
@@ -146,6 +148,47 @@ public class AppDbContext : DbContext
                 Price = 120m,
                 Quantity = 30
             });
+
+        var userEntity = modelBuilder.Entity<User>();
+
+        userEntity.ToTable("Users");
+
+        userEntity.HasKey(user => user.Id);
+
+        userEntity
+            .Property(user => user.Id)
+            .UseIdentityByDefaultColumn();
+
+        userEntity
+            .Property(user => user.FullName)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        userEntity
+            .Property(user => user.Email)
+            .HasColumnType("citext")
+            .HasMaxLength(254)
+            .IsRequired();
+
+        userEntity
+            .HasIndex(user => user.Email)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Email");
+
+        userEntity
+            .Property(user => user.PasswordHash)
+            .HasMaxLength(500)
+            .IsRequired();
+
+        userEntity
+            .Property(user => user.Role)
+            .HasMaxLength(20)
+            .HasDefaultValue(UserRoles.User)
+            .IsRequired();
+
+        userEntity
+            .Property(user => user.CreatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 
     private void ApplyAuditFields()
