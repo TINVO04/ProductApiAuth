@@ -1,8 +1,12 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using ProductApi.Common.Responses;
 using ProductApi.Data;
 using ProductApi.Middleware;
+using ProductApi.Options;
 using ProductApi.Repositories;
 using ProductApi.Services;
 using ProductApi.Services.Auth;
@@ -13,6 +17,35 @@ var connectionString = builder.Configuration.GetConnectionString(
     "DefaultConnection")
     ?? throw new InvalidOperationException(
         "Connection string 'DefaultConnection' was not found.");
+
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+var jwtOptions = jwtSection.Get<JwtOptions>()
+    ?? throw new InvalidOperationException(
+        "JWT configuration was not found.");
+
+builder.Services
+    .AddOptions<JwtOptions>()
+    .Bind(jwtSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions.Secret)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -69,6 +102,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
