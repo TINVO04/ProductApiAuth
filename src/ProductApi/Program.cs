@@ -5,6 +5,7 @@ using ProductApi.Data;
 using ProductApi.Middleware;
 using ProductApi.Repositories;
 using ProductApi.Services;
+using ProductApi.Services.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 builder.Services
     .AddControllers()
