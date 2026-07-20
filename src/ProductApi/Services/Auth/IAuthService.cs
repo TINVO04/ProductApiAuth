@@ -1,0 +1,11 @@
+using ProductApi.Dtos.Auth;
+using ProductApi.Models;
+
+namespace ProductApi.Services.Auth;
+
+public interface IAuthService
+{
+    Task<User> RegisterAsync(
+        RegisterDto request,
+        CancellationToken cancellationToken = default);
+}
