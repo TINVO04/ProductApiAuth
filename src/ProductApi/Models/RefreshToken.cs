@@ -15,4 +15,6 @@ public class RefreshToken
     public DateTime? RevokedAt { get; set; }
 
     public string? ReplacedByTokenHash { get; set; }
+
+    public User User { get; set; } = null!;
 }
