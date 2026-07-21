@@ -126,6 +126,7 @@ public class ProductsController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = UserRoles.Admin + "," + UserRoles.Staff)]
     [HttpPut("{id:int}")]
     [ProducesResponseType(
         typeof(ApiResponse<ProductResponseDto>),
@@ -133,6 +134,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status403Forbidden)]
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status404NotFound)]
