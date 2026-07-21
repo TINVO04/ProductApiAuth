@@ -134,16 +134,44 @@ public class AuthService : IAuthService
                 "Refresh token is invalid.");
         }
 
-        if (storedRefreshToken.ExpiresAt <= DateTime.UtcNow)
+        if (storedRefreshToken.RevokedAt is not null)
+        {
+            throw new UnauthorizedException(
+                "Refresh token has been revoked.");
+        }
+
+        var now = DateTime.UtcNow;
+
+        if (storedRefreshToken.ExpiresAt <= now)
         {
             throw new UnauthorizedException(
                 "Refresh token has expired.");
         }
 
+        var newRefreshTokenResult =
+            _refreshTokenService.CreateRefreshToken();
+
+        storedRefreshToken.RevokedAt = now;
+        storedRefreshToken.ReplacedByTokenHash =
+            newRefreshTokenResult.TokenHash;
+
+        var newRefreshToken = new RefreshToken
+        {
+            TokenHash = newRefreshTokenResult.TokenHash,
+            UserId = storedRefreshToken.UserId,
+            ExpiresAt = newRefreshTokenResult.ExpiresAt,
+            CreatedAt = now
+        };
+
+        await _refreshTokenRepository.AddAsync(
+            newRefreshToken,
+            cancellationToken);
+
         var response = _tokenService.CreateAccessToken(
             storedRefreshToken.User);
-        response.RefreshToken = request.RefreshToken;
-        response.RefreshTokenExpiresAt = storedRefreshToken.ExpiresAt;
+        response.RefreshToken = newRefreshTokenResult.Token;
+        response.RefreshTokenExpiresAt =
+            newRefreshTokenResult.ExpiresAt;
 
         return response;
     }
