@@ -80,6 +80,61 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("refresh")]
+    [ProducesResponseType(
+        typeof(ApiResponse<AuthResponseDto>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Refresh(
+        [FromBody] RefreshTokenDto request,
+        CancellationToken cancellationToken)
+    {
+        var authResult = await _authService.RefreshAsync(
+            request,
+            cancellationToken);
+
+        var response = new ApiResponse<AuthResponseDto>
+        {
+            Success = true,
+            Message = "Token refreshed successfully.",
+            Data = authResult
+        };
+
+        return Ok(response);
+    }
+
+    [HttpPost("logout")]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<object>>> Logout(
+        [FromBody] LogoutDto request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.LogoutAsync(
+            request,
+            cancellationToken);
+
+        var response = new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Logout successful."
+        };
+
+        return Ok(response);
+    }
+
     [Authorize]
     [HttpGet("me")]
     [ProducesResponseType(

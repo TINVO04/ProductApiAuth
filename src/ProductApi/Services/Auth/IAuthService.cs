@@ -12,4 +12,12 @@ public interface IAuthService
     Task<AuthResponseDto> LoginAsync(
         LoginDto request,
         CancellationToken cancellationToken = default);
+
+    Task<AuthResponseDto> RefreshAsync(
+        RefreshTokenDto request,
+        CancellationToken cancellationToken = default);
+
+    Task LogoutAsync(
+        LogoutDto request,
+        CancellationToken cancellationToken = default);
 }

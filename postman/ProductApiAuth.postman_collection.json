@@ -908,6 +908,307 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Day 04 - Refresh Token",
+      "description": "Login, rotate refresh token, verify the old token is rejected, logout, then verify the logged-out token cannot be reused.",
+      "item": [
+        {
+          "name": "01 - Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "const accessToken = response.data?.accessToken;",
+                  "const refreshToken = response.data?.refreshToken;",
+                  "",
+                  "pm.test(\"Access token is returned\", function () {",
+                  "    pm.expect(accessToken).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Refresh token is returned\", function () {",
+                  "    pm.expect(refreshToken).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "if (accessToken) {",
+                  "    pm.collectionVariables.set(\"day04AccessToken\", accessToken);",
+                  "}",
+                  "",
+                  "if (refreshToken) {",
+                  "    pm.collectionVariables.set(\"day04RefreshToken\", refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "02 - Refresh And Rotate Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Refresh successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const previousRefreshToken = pm.collectionVariables.get(\"day04RefreshToken\");",
+                  "const response = pm.response.json();",
+                  "const accessToken = response.data?.accessToken;",
+                  "const refreshToken = response.data?.refreshToken;",
+                  "",
+                  "pm.test(\"A new access token is returned\", function () {",
+                  "    pm.expect(accessToken).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Refresh token is rotated\", function () {",
+                  "    pm.expect(refreshToken).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(refreshToken).to.not.eql(previousRefreshToken);",
+                  "});",
+                  "",
+                  "if (previousRefreshToken) {",
+                  "    pm.collectionVariables.set(\"day04RevokedRefreshToken\", previousRefreshToken);",
+                  "}",
+                  "",
+                  "if (accessToken) {",
+                  "    pm.collectionVariables.set(\"day04AccessToken\", accessToken);",
+                  "}",
+                  "",
+                  "if (refreshToken) {",
+                  "    pm.collectionVariables.set(\"day04RefreshToken\", refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{day04RefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 - Reuse Rotated Token - 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Rotated refresh token is rejected\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"Revoked token message is returned\", function () {",
+                  "    pm.expect(response.message).to.eql(\"Refresh token has been revoked.\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{day04RevokedRefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 - Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Logout successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"Logout response is successful\", function () {",
+                  "    pm.expect(response.success).to.eql(true);",
+                  "    pm.expect(response.message).to.eql(\"Logout successful.\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{day04RefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "05 - Refresh After Logout - 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Logged out refresh token is rejected\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"Revoked token message is returned\", function () {",
+                  "    pm.expect(response.message).to.eql(\"Refresh token has been revoked.\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{day04RefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -980,6 +1281,18 @@
       "key": "adminProductId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "day04AccessToken",
+      "value": ""
+    },
+    {
+      "key": "day04RefreshToken",
+      "value": ""
+    },
+    {
+      "key": "day04RevokedRefreshToken",
+      "value": ""
     }
   ]
 }
