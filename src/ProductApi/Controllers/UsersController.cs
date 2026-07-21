@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductApi.Common.Responses;
 using ProductApi.Dtos.Users;
+using ProductApi.Models;
 using ProductApi.Services.Users;
 
 namespace ProductApi.Controllers;
@@ -16,10 +18,17 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpGet]
     [ProducesResponseType(
         typeof(ApiResponse<IReadOnlyList<UserResponseDto>>),
         StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<UserResponseDto>>>> GetAll(
         CancellationToken cancellationToken)
     {
