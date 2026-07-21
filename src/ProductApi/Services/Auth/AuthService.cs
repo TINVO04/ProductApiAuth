@@ -112,6 +112,42 @@ public class AuthService : IAuthService
         return response;
     }
 
+    public async Task<AuthResponseDto> RefreshAsync(
+        RefreshTokenDto request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            throw new UnauthorizedException(
+                "Refresh token is invalid.");
+        }
+
+        var tokenHash = _refreshTokenService.HashToken(
+            request.RefreshToken);
+        var storedRefreshToken = await _refreshTokenRepository.GetByHashAsync(
+            tokenHash,
+            cancellationToken);
+
+        if (storedRefreshToken is null)
+        {
+            throw new UnauthorizedException(
+                "Refresh token is invalid.");
+        }
+
+        if (storedRefreshToken.ExpiresAt <= DateTime.UtcNow)
+        {
+            throw new UnauthorizedException(
+                "Refresh token has expired.");
+        }
+
+        var response = _tokenService.CreateAccessToken(
+            storedRefreshToken.User);
+        response.RefreshToken = request.RefreshToken;
+        response.RefreshTokenExpiresAt = storedRefreshToken.ExpiresAt;
+
+        return response;
+    }
+
     private static bool IsDuplicateEmailException(
         DbUpdateException exception)
     {
