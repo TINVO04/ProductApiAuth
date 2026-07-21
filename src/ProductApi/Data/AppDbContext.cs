@@ -16,6 +16,8 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     public override Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {
@@ -189,6 +191,36 @@ public class AppDbContext : DbContext
         userEntity
             .Property(user => user.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        var refreshTokenEntity = modelBuilder.Entity<RefreshToken>();
+
+        refreshTokenEntity.ToTable("RefreshTokens");
+
+        refreshTokenEntity.HasKey(refreshToken => refreshToken.Id);
+
+        refreshTokenEntity
+            .Property(refreshToken => refreshToken.TokenHash)
+            .HasMaxLength(64)
+            .IsRequired();
+
+        refreshTokenEntity
+            .HasIndex(refreshToken => refreshToken.TokenHash)
+            .IsUnique()
+            .HasDatabaseName("IX_RefreshTokens_TokenHash");
+
+        refreshTokenEntity
+            .Property(refreshToken => refreshToken.ReplacedByTokenHash)
+            .HasMaxLength(64);
+
+        refreshTokenEntity
+            .Property(refreshToken => refreshToken.CreatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        refreshTokenEntity
+            .HasOne(refreshToken => refreshToken.User)
+            .WithMany(user => user.RefreshTokens)
+            .HasForeignKey(refreshToken => refreshToken.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private void ApplyAuditFields()
