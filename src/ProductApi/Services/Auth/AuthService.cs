@@ -176,6 +176,40 @@ public class AuthService : IAuthService
         return response;
     }
 
+    public async Task LogoutAsync(
+        LogoutDto request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            throw new UnauthorizedException(
+                "Refresh token is invalid.");
+        }
+
+        var tokenHash = _refreshTokenService.HashToken(
+            request.RefreshToken);
+        var storedRefreshToken = await _refreshTokenRepository.GetByHashAsync(
+            tokenHash,
+            cancellationToken);
+
+        if (storedRefreshToken is null)
+        {
+            throw new UnauthorizedException(
+                "Refresh token is invalid.");
+        }
+
+        if (storedRefreshToken.RevokedAt is not null)
+        {
+            throw new UnauthorizedException(
+                "Refresh token has already been revoked.");
+        }
+
+        storedRefreshToken.RevokedAt = DateTime.UtcNow;
+
+        await _refreshTokenRepository.SaveChangesAsync(
+            cancellationToken);
+    }
+
     private static bool IsDuplicateEmailException(
         DbUpdateException exception)
     {
