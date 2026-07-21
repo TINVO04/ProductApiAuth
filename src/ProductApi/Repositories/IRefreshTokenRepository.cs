@@ -11,4 +11,7 @@ public interface IRefreshTokenRepository
     Task AddAsync(
         RefreshToken refreshToken,
         CancellationToken cancellationToken = default);
+
+    Task SaveChangesAsync(
+        CancellationToken cancellationToken = default);
 }
