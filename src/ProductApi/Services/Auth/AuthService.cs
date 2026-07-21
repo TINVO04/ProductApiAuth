@@ -13,17 +13,23 @@ public class AuthService : IAuthService
     private const string UserEmailConstraint = "IX_Users_Email";
 
     private readonly IUserRepository _userRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IPasswordService _passwordService;
     private readonly ITokenService _tokenService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
     public AuthService(
         IUserRepository userRepository,
+        IRefreshTokenRepository refreshTokenRepository,
         IPasswordService passwordService,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IRefreshTokenService refreshTokenService)
     {
         _userRepository = userRepository;
+        _refreshTokenRepository = refreshTokenRepository;
         _passwordService = passwordService;
         _tokenService = tokenService;
+        _refreshTokenService = refreshTokenService;
     }
 
     public async Task<User> RegisterAsync(
@@ -85,7 +91,25 @@ public class AuthService : IAuthService
                 "Email or password is incorrect.");
         }
 
-        return _tokenService.CreateAccessToken(user);
+        var response = _tokenService.CreateAccessToken(user);
+        var refreshTokenResult = _refreshTokenService.CreateRefreshToken();
+
+        var refreshToken = new RefreshToken
+        {
+            TokenHash = refreshTokenResult.TokenHash,
+            UserId = user.Id,
+            ExpiresAt = refreshTokenResult.ExpiresAt,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _refreshTokenRepository.AddAsync(
+            refreshToken,
+            cancellationToken);
+
+        response.RefreshToken = refreshTokenResult.Token;
+        response.RefreshTokenExpiresAt = refreshTokenResult.ExpiresAt;
+
+        return response;
     }
 
     private static bool IsDuplicateEmailException(
