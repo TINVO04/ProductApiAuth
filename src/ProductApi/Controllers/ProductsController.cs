@@ -244,6 +244,12 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(
         typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
         StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(
         [FromRoute] int id,
