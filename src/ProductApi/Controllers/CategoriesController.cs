@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductApi.Common.Exceptions;
 using ProductApi.Common.Responses;
 using ProductApi.Dtos;
+using ProductApi.Models;
 using ProductApi.Services;
 
 namespace ProductApi.Controllers;
@@ -60,6 +62,7 @@ public class CategoriesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = UserRoles.Admin + "," + UserRoles.Staff)]
     [HttpPost]
     [ProducesResponseType(
         typeof(ApiResponse<CategoryResponseDto>),
@@ -67,6 +70,12 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status403Forbidden)]
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status409Conflict)]
@@ -91,6 +100,7 @@ public class CategoriesController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = UserRoles.Admin + "," + UserRoles.Staff)]
     [HttpPut("{id:int}")]
     [ProducesResponseType(
         typeof(ApiResponse<CategoryResponseDto>),
@@ -98,6 +108,12 @@ public class CategoriesController : ControllerBase
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status403Forbidden)]
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status404NotFound)]
@@ -124,8 +140,15 @@ public class CategoriesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = UserRoles.Admin)]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(ApiResponse<object>),
+        StatusCodes.Status403Forbidden)]
     [ProducesResponseType(
         typeof(ApiResponse<object>),
         StatusCodes.Status404NotFound)]

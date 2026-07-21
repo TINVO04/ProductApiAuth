@@ -116,23 +116,9 @@ public class AuthService : IAuthService
         RefreshTokenDto request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.RefreshToken))
-        {
-            throw new UnauthorizedException(
-                "Refresh token is invalid.");
-        }
-
-        var tokenHash = _refreshTokenService.HashToken(
-            request.RefreshToken);
-        var storedRefreshToken = await _refreshTokenRepository.GetByHashAsync(
-            tokenHash,
+        var storedRefreshToken = await GetStoredRefreshTokenAsync(
+            request.RefreshToken,
             cancellationToken);
-
-        if (storedRefreshToken is null)
-        {
-            throw new UnauthorizedException(
-                "Refresh token is invalid.");
-        }
 
         if (storedRefreshToken.RevokedAt is not null)
         {
@@ -180,23 +166,9 @@ public class AuthService : IAuthService
         LogoutDto request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.RefreshToken))
-        {
-            throw new UnauthorizedException(
-                "Refresh token is invalid.");
-        }
-
-        var tokenHash = _refreshTokenService.HashToken(
-            request.RefreshToken);
-        var storedRefreshToken = await _refreshTokenRepository.GetByHashAsync(
-            tokenHash,
+        var storedRefreshToken = await GetStoredRefreshTokenAsync(
+            request.RefreshToken,
             cancellationToken);
-
-        if (storedRefreshToken is null)
-        {
-            throw new UnauthorizedException(
-                "Refresh token is invalid.");
-        }
 
         if (storedRefreshToken.RevokedAt is not null)
         {
@@ -208,6 +180,26 @@ public class AuthService : IAuthService
 
         await _refreshTokenRepository.SaveChangesAsync(
             cancellationToken);
+    }
+
+    private async Task<RefreshToken> GetStoredRefreshTokenAsync(
+        string refreshToken,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            throw new UnauthorizedException(
+                "Refresh token is invalid.");
+        }
+
+        var tokenHash = _refreshTokenService.HashToken(refreshToken);
+        var storedRefreshToken = await _refreshTokenRepository.GetByHashAsync(
+            tokenHash,
+            cancellationToken);
+
+        return storedRefreshToken
+            ?? throw new UnauthorizedException(
+                "Refresh token is invalid.");
     }
 
     private static bool IsDuplicateEmailException(

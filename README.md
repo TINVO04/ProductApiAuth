@@ -192,6 +192,12 @@ Logout thành công trả `200 OK` và đánh dấu token đã bị thu hồi. S
 | `POST /api/products` | Không | Không | Có | Có |
 | `PUT /api/products/{id}` | Không | Không | Có | Có |
 | `DELETE /api/products/{id}` | Không | Không | Không | Có |
+| `PATCH /api/products/{id}/restore` | Không | Không | Không | Có |
+| `GET /api/categories` | Có | Có | Có | Có |
+| `GET /api/categories/{id}` | Có | Có | Có | Có |
+| `POST /api/categories` | Không | Không | Có | Có |
+| `PUT /api/categories/{id}` | Không | Không | Có | Có |
+| `DELETE /api/categories/{id}` | Không | Không | Không | Có |
 | `GET /api/users` | Không | Không | Không | Có |
 
 - `401 Unauthorized`: request chưa gửi token hoặc token không hợp lệ, hết hạn.
