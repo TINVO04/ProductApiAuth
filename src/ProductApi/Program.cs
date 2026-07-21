@@ -11,6 +11,7 @@ using ProductApi.Options;
 using ProductApi.Repositories;
 using ProductApi.Services;
 using ProductApi.Services.Auth;
+using ProductApi.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
