@@ -24,6 +24,14 @@ Product API xây dựng bằng ASP.NET Core 8, Entity Framework Core và Postgre
 - API `GET /api/auth/me` đọc thông tin user từ token và yêu cầu đăng nhập.
 - Email không tồn tại hoặc password sai đều trả `401 Unauthorized` với cùng một thông báo.
 
+## Day 03 - Phân quyền theo role
+
+- GET Product vẫn public, không cần đăng nhập.
+- Admin và Staff được tạo, cập nhật Product.
+- Chỉ Admin được xóa Product và xem danh sách User.
+- Danh sách User không trả `PasswordHash`.
+- User đã đăng nhập nhưng không đủ quyền nhận `403 Forbidden`.
+
 ## Công nghệ
 
 - .NET 8
@@ -133,11 +141,25 @@ GET /api/auth/me
 
 Endpoint này trả `userId`, `email`, `role` từ token. Nếu không có token, token không hợp lệ hoặc đã hết hạn thì API trả `401 Unauthorized`.
 
+## Bảng phân quyền
+
+| API | Public | User | Staff | Admin |
+| --- | :---: | :---: | :---: | :---: |
+| `GET /api/products` | Có | Có | Có | Có |
+| `GET /api/products/{id}` | Có | Có | Có | Có |
+| `POST /api/products` | Không | Không | Có | Có |
+| `PUT /api/products/{id}` | Không | Không | Có | Có |
+| `DELETE /api/products/{id}` | Không | Không | Không | Có |
+| `GET /api/users` | Không | Không | Không | Có |
+
+- `401 Unauthorized`: request chưa gửi token hoặc token không hợp lệ, hết hạn.
+- `403 Forbidden`: token hợp lệ nhưng role của tài khoản không có quyền dùng API đó.
+
 ## Test bằng Postman
 
-Import file `postman/ProductApiAuth.postman_collection.json` vào Postman. Collection có sẵn các biến `baseUrl`, `email`, `password`, `accessToken`.
+Import file `postman/ProductApiAuth.postman_collection.json` vào Postman. Collection có sẵn flow đăng ký, đăng nhập và kiểm tra quyền của Admin, Staff, User.
 
-Chạy lần lượt:
+Flow Day 02:
 
 1. `Register` để tạo tài khoản test.
 2. `Login` để nhận JWT. Script của request sẽ tự lưu `data.accessToken` vào biến `accessToken`.
@@ -150,6 +172,20 @@ Login trả JWT:
 Token được dùng lại để đọc thông tin user:
 
 ![Đọc thông tin user từ token](docs/images/day02-current-user.png)
+
+Flow Day 03 đăng nhập ba role, tự lưu token rồi kiểm tra từng quyền. Chạy toàn bộ collection bằng Newman đã hoàn thành 15 request và 19 assertion, không có lỗi.
+
+User gọi DELETE Product nhận `403 Forbidden`:
+
+![User không có quyền xóa Product](docs/images/day03-user-delete-forbidden.png)
+
+Staff tạo Product thành công với `201 Created`:
+
+![Staff tạo Product](docs/images/day03-staff-create-product.png)
+
+Admin xem danh sách User thành công và response không có `PasswordHash`:
+
+![Admin xem danh sách User](docs/images/day03-admin-users.png)
 
 ## Kết quả kiểm tra
 
@@ -164,6 +200,13 @@ Token được dùng lại để đọc thông tin user:
 - JWT có đúng issuer, audience, expiration và các claims đã cấu hình.
 - Swagger hiển thị Bearer scheme và hai endpoint login/me.
 - Postman tự lưu access token sau khi login và dùng lại cho `/api/auth/me`.
+- GET Product không cần token vẫn truy cập được.
+- Staff tạo và cập nhật Product thành công; xóa Product và xem danh sách User nhận `403`.
+- User thường xóa Product nhận `403`.
+- Request không có token gọi API cần đăng nhập nhận `401`.
+- Admin tạo, cập nhật, xóa Product và xem danh sách User thành công.
+- Response của `GET /api/users` không trả `PasswordHash`.
+- Newman chạy đủ 15 request, 19 assertion và không có lỗi.
 
 ## Lưu ý
 
